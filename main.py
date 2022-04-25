@@ -52,7 +52,7 @@ def sorted_by_value():
 
 def sorted_by_ud_percent():
     body_ = sorted([i.text.split() for i in currency], key=lambda x: float(x[-1][1:-1]), reverse=True)
-    s = "\n".join(["    ".join(b) for b in body_])
+    s = "\n".join(["   ".join(b) for b in body_])
 
     return f"{datetime.now().strftime('%d/%m/%Y, %H:%M')}\n" \
            f"{header}\n" \
