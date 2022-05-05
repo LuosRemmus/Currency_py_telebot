@@ -3,8 +3,9 @@ import requests
 import telebot
 from telebot import types
 from bs4 import BeautifulSoup
+from TOKEN import Token as Tok
 
-Token = '5377279394:AAEo7i23FpDgPeI9FizGOhMUo24e0m_MMBU'
+Token = Tok
 
 date = datetime.now().strftime('%d/%m/%Y')
 
@@ -59,7 +60,6 @@ def telegram_bot(token):
                        f"Привет <b>{message.from_user.first_name}</b>!\n"
                        f"Я бот, который покажет тебе курс валют как относительно рубля.\n"
                        f"Чтобы посмотреть курс валют - нажми /currency", parse_mode='html')
-
 
     @bot.message_handler(commands=['currency'])
     def get_currency(message):
