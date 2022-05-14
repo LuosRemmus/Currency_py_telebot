@@ -10,15 +10,21 @@ url = "https://www.cbr-xml-daily.ru/daily_json.js"
 response = get(url)
 
 currency = response.json()['Valute']
+date = response.json()['Date'][:10]
+day, month, year = date[8:], date[5:7], date[:4]
 
-emoji_dct = {"AMD": '🇦🇲', "AUD": '🇦🇺', "AZN": '🇦🇿', "BGN": '🇧🇬',
-             "BRL": '🇧🇷', "BYN": '🇧🇾', "CAD": '🇨🇦', "CHF": '🇨🇭',
-             "CNY": '🇨🇳', "CZK": '🇨🇿', "DKK": '🇳🇱', "EUR": '🇪🇺',
-             "GBP": '🇬🇧', "HUF": '🇭🇺', "INR": '🇮🇳', "JPY": '🇯🇵',
-             "KGS": '🇰🇬', "KRW": '🇰🇷', "KZT": '🇰🇿', "MDL": '🇲🇩',
-             "NOK": '🇳🇴', "PLN": '🇵🇱', "RON": '🇷🇴', "SEK": '🇸🇪',
-             "SGD": '🇸🇬', "TJS": '🇹🇯', "TMT": '🇹🇲', "TRY": '🇹🇷',
-             "UAH": '🇺🇦', "USD": '🇺🇸', "UZS": '🇺🇿', "XDR": '💵', "ZAR": '🇿🇦'}
+
+emoji_dct = {"AMD": '🇦🇲', "AUD": '🇦🇺', "AZN": '🇦🇿',
+             "BGN": '🇧🇬', "BRL": '🇧🇷', "BYN": '🇧🇾',
+             "CAD": '🇨🇦', "CHF": '🇨🇭', "CNY": '🇨🇳',
+             "CZK": '🇨🇿', "DKK": '🇳🇱', "EUR": '🇪🇺',
+             "GBP": '🇬🇧', "HUF": '🇭🇺', "INR": '🇮🇳',
+             "JPY": '🇯🇵', "KGS": '🇰🇬', "KRW": '🇰🇷',
+             "KZT": '🇰🇿', "MDL": '🇲🇩', "NOK": '🇳🇴',
+             "PLN": '🇵🇱', "RON": '🇷🇴', "SEK": '🇸🇪',
+             "SGD": '🇸🇬', "TJS": '🇹🇯', "TMT": '🇹🇲',
+             "TRY": '🇹🇷', "UAH": '🇺🇦', "USD": '🇺🇸',
+             "UZS": '🇺🇿', "XDR": '💵', "ZAR": '🇿🇦'}
 
 
 rise_and_fall = '📈📉'
@@ -50,18 +56,22 @@ def telegram_bot(token):
 
     @bot.message_handler(content_types=['text'])
     def Specific(message):
-        cur = message.text[-3:]
+        try:
+            cur = message.text[-3:]
 
-        percentage = currency[cur]['Value'] - currency[cur]['Previous']
-        if percentage > 0:
-            icon = rise_and_fall[0]
-        else:
-            icon = rise_and_fall[1]
+            change_value = currency[cur]['Value'] - currency[cur]['Previous']
+            if change_value > 0:
+                icon = rise_and_fall[0]
+            else:
+                icon = rise_and_fall[1]
 
-        msg = f"{emoji_dct[cur]}{currency[cur]['Nominal']} {currency[cur]['Name']}\n" \
-              f"{icon}{currency[cur]['Value']} руб. ({round(percentage, 4)})"
+            msg = f"Курс на {day}/{month}/{year}:\n" \
+                  f"{emoji_dct[cur]}{currency[cur]['Nominal']} {currency[cur]['Name']}\n" \
+                  f"{icon}{currency[cur]['Value']} руб. ({round(change_value, 4)})"
 
-        bot.send_message(message.chat.id, msg)
+            bot.send_message(message.chat.id, msg)
+        except Exception as exception:
+            bot.send_message(message.chat.id, "Я вас не понимаю...")
 
     bot.polling()
 
