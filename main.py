@@ -13,7 +13,6 @@ currency = response.json()['Valute']
 date = response.json()['Date'][:10]
 day, month, year = date[8:], date[5:7], date[:4]
 
-
 emoji_dct = {"AMD": '🇦🇲', "AUD": '🇦🇺', "AZN": '🇦🇿',
              "BGN": '🇧🇬', "BRL": '🇧🇷', "BYN": '🇧🇾',
              "CAD": '🇨🇦', "CHF": '🇨🇭', "CNY": '🇨🇳',
@@ -26,18 +25,26 @@ emoji_dct = {"AMD": '🇦🇲', "AUD": '🇦🇺', "AZN": '🇦🇿',
              "TRY": '🇹🇷', "UAH": '🇺🇦', "USD": '🇺🇸',
              "UZS": '🇺🇿', "XDR": '💵', "ZAR": '🇿🇦'}
 
-
 rise_and_fall = '📈📉'
+
+
+def create_markup() -> types.ReplyKeyboardMarkup:
+    markup = types.ReplyKeyboardMarkup(row_width=6, resize_keyboard=True)
+    buttons = []
+    for em in emoji_dct:
+        buttons.append(types.KeyboardButton(f'{emoji_dct[em]}{em}'))
+    markup.add(*tuple(buttons))
+    return markup
 
 
 # TELEBOT COMMANDS
 
 
-def telegram_bot(token):
+def telegram_bot(token: str):
     bot = telebot.TeleBot(token)
 
     @bot.message_handler(commands=["start"])
-    def start_message(message):
+    def start_message(message: telebot.types.Message):
         bot.send_photo(message.chat.id,
                        'https://avatars.mds.yandex.net/get-zen_doc/2814495'
                        '/pub_5f85eed13940476c66f965d8_5f85ef84ae6a9712bf416ade/scale_1200',
@@ -46,21 +53,18 @@ def telegram_bot(token):
                        f"Чтобы посмотреть курс валют - нажми /currency", parse_mode='html')
 
     @bot.message_handler(commands=['currency'])
-    def get_currency(message):
-        markup = types.ReplyKeyboardMarkup(row_width=6, resize_keyboard=True)
-        buttons = []
-        for em in emoji_dct:
-            buttons.append(types.KeyboardButton(f'{emoji_dct[em]}{em}'))
-        markup.add(*tuple(buttons))
-        bot.send_message(message.chat.id, "Выбери одну из валют", reply_markup=markup)
+    def get_currency(message: telebot.types.Message):
+        # Создание кнопок с валютами и переадресация на функцию specific
+        reply = bot.send_message(message.chat.id, "Выбери одну из валют", reply_markup=create_markup())
+        bot.register_next_step_handler(reply, specific)
 
-    @bot.message_handler(content_types=['text'])
-    def Specific(message):
+    # Бот отправляет пользователю текущую дату, курс выбранной валюты и на сколько изменилось значение курса
+    def specific(message: telebot.types.Message):
         try:
             cur = message.text[-3:]
 
-            change_value = currency[cur]['Value'] - currency[cur]['Previous']
-            if change_value > 0:
+            change_value = currency[cur]['Value'] - currency[cur]['Previous']   # Изменение значения курса
+            if change_value > 0:    # Выбор эмоджи в соответствии с характером изменения курса валюты (растёт/падает)
                 icon = rise_and_fall[0]
             else:
                 icon = rise_and_fall[1]
@@ -70,8 +74,9 @@ def telegram_bot(token):
                   f"{icon}{currency[cur]['Value']} руб. ({round(change_value, 4)})"
 
             bot.send_message(message.chat.id, msg)
-        except Exception as exception:
+        except KeyError as exception:  # Уточнить тип ошибки
             bot.send_message(message.chat.id, "Я вас не понимаю...")
+            print(f'Input error. {exception} - {type(exception)}')
 
     bot.polling()
 
