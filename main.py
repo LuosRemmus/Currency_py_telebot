@@ -28,11 +28,12 @@ emoji_dct = {"AMD": '🇦🇲', "AUD": '🇦🇺', "AZN": '🇦🇿',
 rise_and_fall = '📈📉'
 
 
-def create_markup() -> types.ReplyKeyboardMarkup:
-    markup = types.ReplyKeyboardMarkup(row_width=6, resize_keyboard=True)
+def create_markup() -> types.InlineKeyboardMarkup:
+    markup = types.InlineKeyboardMarkup(row_width=3)
     buttons = []
     for em in emoji_dct:
-        buttons.append(types.KeyboardButton(f'{emoji_dct[em]}{em}'))
+        btn = types.InlineKeyboardButton(f'{emoji_dct[em]}{em}', callback_data=f'{em}')
+        buttons.append(btn)
     markup.add(*tuple(buttons))
     return markup
 
@@ -45,9 +46,8 @@ def telegram_bot(token: str):
 
     @bot.message_handler(commands=["start"])
     def start_message(message: telebot.types.Message):
-        bot.send_photo(message.chat.id,
-                       'https://avatars.mds.yandex.net/get-zen_doc/2814495'
-                       '/pub_5f85eed13940476c66f965d8_5f85ef84ae6a9712bf416ade/scale_1200',
+        bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAEFS9ti01Nn47Flb-wzmPga3eFhakLHZwACbgADwDZPE22H7UqzeJmXKQQ')
+        bot.send_message(message.chat.id,
                        f"Привет <b>{message.from_user.first_name}</b>!\n"
                        f"Я бот, который покажет тебе курс валют как относительно рубля.\n"
                        f"Чтобы посмотреть курс валют - нажми /currency", parse_mode='html')
@@ -56,15 +56,15 @@ def telegram_bot(token: str):
     def get_currency(message: telebot.types.Message):
         # Создание кнопок с валютами и переадресация на функцию specific
         reply = bot.send_message(message.chat.id, "Выбери одну из валют", reply_markup=create_markup())
-        bot.register_next_step_handler(reply, specific)
+        bot.register_next_step_handler(reply, show_currency)
 
-    # Бот отправляет пользователю текущую дату, курс выбранной валюты и на сколько изменилось значение курса
-    def specific(message: telebot.types.Message):
+    @bot.callback_query_handler(func=lambda c: c.data and c.data in emoji_dct.keys())
+    def show_currency(callback_query: types.CallbackQuery):
         try:
-            cur = message.text[-3:]
+            cur = callback_query.data[-3:]
 
-            change_value = currency[cur]['Value'] - currency[cur]['Previous']   # Изменение значения курса
-            if change_value > 0:    # Выбор эмоджи в соответствии с характером изменения курса валюты (растёт/падает)
+            change_value = currency[cur]['Value'] - currency[cur]['Previous']  # Изменение значения курса
+            if change_value > 0:  # Выбор эмоджи в соответствии с характером изменения курса валюты (растёт/падает)
                 icon = rise_and_fall[0]
             else:
                 icon = rise_and_fall[1]
@@ -73,10 +73,19 @@ def telegram_bot(token: str):
                   f"{emoji_dct[cur]}{currency[cur]['Nominal']} {currency[cur]['Name']}\n" \
                   f"{icon}{currency[cur]['Value']} руб. ({round(change_value, 4)})"
 
-            bot.send_message(message.chat.id, msg)
-        except KeyError as exception:  # Уточнить тип ошибки
-            bot.send_message(message.chat.id, "Я вас не понимаю...")
-            print(f'Input error. {exception} - {type(exception)}')
+            bot.answer_callback_query(callback_query.id, text=msg, show_alert=True)
+
+        except KeyError as key_error:
+            bot.send_message(callback_query.id, "Я вас не понимаю...")
+            print(f'Key error. {key_error} - {type(key_error)}')
+
+        except TypeError as type_error:
+            bot.send_message(callback_query.id, 'Я вас не понимаю...')
+            print(f'Type error. {type_error} - {type(type_error)}')
+
+        except AttributeError as attribute_error:
+            bot.send_message(callback_query.id, "Я вас не понимаю...")
+            print(f'Attribute error. {attribute_error} - {type(attribute_error)}')
 
     bot.polling()
 
