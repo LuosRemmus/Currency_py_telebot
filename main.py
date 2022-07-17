@@ -30,10 +30,13 @@ rise_and_fall = '📈📉'
 
 def create_markup() -> types.InlineKeyboardMarkup:
     markup = types.InlineKeyboardMarkup(row_width=3)
+
     buttons = []
+
     for em in emoji_dct:
         btn = types.InlineKeyboardButton(f'{emoji_dct[em]}{em}', callback_data=f'{em}')
         buttons.append(btn)
+
     markup.add(*tuple(buttons))
     return markup
 
@@ -55,7 +58,7 @@ def telegram_bot(token: str):
     @bot.message_handler(commands=['currency'])
     def get_currency(message: telebot.types.Message):
         # Создание кнопок с валютами и переадресация на функцию specific
-        reply = bot.send_message(message.chat.id, "Выбери одну из валют", reply_markup=create_markup())
+        reply = bot.send_message(message.chat.id, "Выбери одну из валют\nВ конце нажми на команду /stop", reply_markup=create_markup())
         bot.register_next_step_handler(reply, show_currency)
 
     @bot.callback_query_handler(func=lambda c: c.data and c.data in emoji_dct.keys())
@@ -75,17 +78,8 @@ def telegram_bot(token: str):
 
             bot.answer_callback_query(callback_query.id, text=msg, show_alert=True)
 
-        except KeyError as key_error:
-            bot.send_message(callback_query.id, "Я вас не понимаю...")
-            print(f'Key error. {key_error} - {type(key_error)}')
-
-        except TypeError as type_error:
-            bot.send_message(callback_query.id, 'Я вас не понимаю...')
-            print(f'Type error. {type_error} - {type(type_error)}')
-
-        except AttributeError as attribute_error:
-            bot.send_message(callback_query.id, "Я вас не понимаю...")
-            print(f'Attribute error. {attribute_error} - {type(attribute_error)}')
+        except AttributeError as a:
+            print(f"Exception - {a}({type(a)})")
 
     bot.polling()
 
