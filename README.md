@@ -1,3 +1,7 @@
 # Currency_py_telebot
 
-<h3>[How bot works](https://youtube.com/shorts/tZHyPhXKEqc?feature=share)</h3>
+<h3>
+  <a href='https://youtube.com/shorts/tZHyPhXKEqc?feature=share'>
+    How bot works
+  </a>
+</h3>
