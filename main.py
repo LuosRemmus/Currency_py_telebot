@@ -52,7 +52,7 @@ def telegram_bot(token: str):
         bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAEFS9ti01Nn47Flb-wzmPga3eFhakLHZwACbgADwDZPE22H7UqzeJmXKQQ')
         bot.send_message(message.chat.id,
                        f"Привет <b>{message.from_user.first_name}</b>!\n"
-                       f"Я бот, который покажет тебе курс валют как относительно рубля.\n"
+                       f"Я бот, который покажет тебе курс валют относительно рубля.\n"
                        f"Чтобы посмотреть курс валют - нажми /currency", parse_mode='html')
 
     @bot.message_handler(commands=['currency'])
